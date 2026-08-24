@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Global American English CEFR Assessment - Evaluate your proficiency level with adaptive CAT testing and instant global exam score equivalence (TOEFL, IELTS, DET, TOEIC).">
+    <title>AmeriTest Global - American English CEFR Assessment</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for test completion -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        usBlue: '#0a2540',
+                        usRed: '#d9381e',
+                        usGold: '#f5a623',
+                        levelA1: '#10b981',
+                        levelA2: '#06b6d4',
+                        levelB1: '#3b82f6',
+                        levelB2: '#8b5cf6',
+                        levelC1: '#ec4899',
+                        levelC2: '#f43f5e',
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover:not(.disabled) {
+            transform: translateY(-2px);
+            border-color: #60a5fa;
+            background: rgba(51, 65, 85, 0.8);
+        }
+        .option-card.selected {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #modal-certificate, #modal-certificate * {
+                visibility: visible;
+            }
+            #modal-certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased text-slate-100 bg-slate-950 selection:bg-blue-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+            
+            <!-- Logo Section -->
+            <div class="flex items-center space-x-3 cursor-pointer shrink-0" onclick="app.resetToHome()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-red-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid font-black text-white text-base">US</i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
+                        AmeriTest <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold border border-blue-500/30">GLOBAL 3.0</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block" data-i18n="tagline">Global American English Standard</p>
+                </div>
+            </div>
+
+            <!-- Controls & Actions Section -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                
+                <!-- Install App Button -->
+                <button id="pwa-install-btn" onclick="app.showInstallModal()" class="px-3 py-1.5 text-xs rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-md transition flex items-center gap-1.5 border border-emerald-400/30">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden md:inline" data-i18n="installApp">Install App</span>
+                </button>
+
+                <!-- Language Selector -->
+                <div class="relative">
+                    <select id="lang-selector" onchange="app.changeLanguage(this.value)" class="bg-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 font-medium">
+                        <option value="en">🇺🇸 English</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="pt">🇧🇷 Português</option>
+                        <option value="zh">🇨🇳 中文</option>
+                        <option value="ja">🇯🇵 日本語</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="vi">🇻🇳 Tiếng Việt</option>
+                        <option value="tr">🇹🇷 Türkçe</option>
+                    </select>
+                </div>
+
+                <!-- Audio Toggle -->
+                <button id="audio-toggle-btn" onclick="app.toggleAudioSettings()" class="hidden sm:flex px-2.5 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition items-center gap-1.5">
+                    <i id="audio-icon" class="fa-solid fa-volume-high text-blue-400"></i>
+                    <span id="audio-status-text" class="text-emerald-400 font-semibold text-[11px]">Audio</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+
+        <!-- VIEW 1: WELCOME SCREEN -->
+        <section id="view-welcome" class="space-y-8 my-auto py-4">
+            
+            <div class="text-center space-y-4 max-w-2xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+                    <i class="fa-solid fa-earth-americas"></i> <span data-i18n="badgeTitle">Global Adaptive CEFR Assessment</span>
+                </div>
+                <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+                    <span data-i18n="heroTitle1">Evaluate Your</span> <span class="gradient-text" data-i18n="heroTitle2">American English Level</span>
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base leading-relaxed" data-i18n="heroDesc">
+                    Pinpoint your proficiency across CEFR levels (A1, A2, B1, B2, C1, C2) in 10 dynamic adaptive questions drawn from a 100-item global bank. Get instant equivalency mapping for TOEFL iBT, IELTS, and Duolingo.
+                </p>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="text-slate-200 font-bold text-base mb-1" data-i18n="feature1Title">CAT Adaptive Engine</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed" data-i18n="feature1Desc">
+                        Questions adapt difficulty in real time to locate your exact ceiling from A1 to C2.
+                    </p>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <h3 class="text-slate-200 font-bold text-base mb-1" data-i18n="feature2Title">100-Question Bank</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed" data-i18n="feature2Desc">
+                        Comprehensive dataset covering US grammar, idioms, vocabulary, phrasal verbs, and spoken accents.
+                    </p>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <h3 class="text-slate-200 font-bold text-base mb-1" data-i18n="feature3Title">Install Anywhere</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed" data-i18n="feature3Desc">
+                        Install on Android, Mac, Windows, or iOS as a lightweight native desktop/mobile PWA app.
+                    </p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-700/60 max-w-xl mx-auto shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="space-y-5">
+                    <div>
+                        <label for="user-name" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2" data-i18n="inputLabel">
+                            Enter Your Full Name (For Global Certificate)
+                        </label>
+                        <input type="text" id="user-name" placeholder="e.g. Alex Morgan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-sm">
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="timer-toggle" checked class="w-4 h-4 text-blue-600 rounded bg-slate-800 border-slate-700 focus:ring-blue-500">
+                            <label for="timer-toggle" class="text-xs text-slate-300 font-medium cursor-pointer" data-i18n="timerOption">
+                                Enable Timer (45s per question)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="app.startTest()" class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/25 transition transform active:scale-95 flex items-center justify-center gap-3 text-base">
+                        <span data-i18n="btnStart">Begin Assessment</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <p class="text-center text-xs text-slate-500" data-i18n="formSubtext">10 Questions • ~3-5 Minutes • Instant Level & Score Certificate</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: QUIZ INTERFACE -->
+        <section id="view-quiz" class="hidden space-y-6 max-w-3xl mx-auto w-full my-auto py-4">
+            
+            <!-- Progress Bar & Question Tracker -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
+                        <span data-i18n="lblQuestion">Question</span> <span id="quiz-q-num" class="text-white font-bold text-sm">1</span> / 10
+                    </span>
+                    <span id="quiz-current-level" class="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wide">
+                        Target: B1
+                    </span>
+                    <span id="quiz-timer-container" class="flex items-center gap-1.5 text-amber-400 font-mono">
+                        <i class="fa-regular fa-clock"></i>
+                        <span id="quiz-timer">45</span>s
+                    </span>
+                </div>
+                
+                <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700/50">
+                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: 10%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-700/80 shadow-2xl relative">
+                
+                <div class="flex items-center justify-between mb-4">
+                    <span id="q-category" class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-blue-400"></i> Grammar & American Usage
+                    </span>
+                    <button id="q-audio-play-btn" onclick="app.playQuestionAudio()" class="hidden text-xs bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-lg transition items-center gap-2 font-medium">
+                        <i class="fa-solid fa-volume-high text-blue-400"></i> <span data-i18n="btnListenAudio">Listen to Audio</span>
+                    </button>
+                </div>
+
+                <div id="q-context" class="hidden mb-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 italic text-sm leading-relaxed"></div>
+
+                <h3 id="q-prompt" class="text-lg sm:text-xl font-bold text-white mb-6 leading-relaxed">
+                    Loading question...
+                </h3>
+
+                <div id="q-options-container" class="space-y-3"></div>
+
+                <div class="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between">
+                    <div class="text-xs text-slate-500 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span data-i18n="quizFooterNote">Select the best American English answer.</span>
+                    </div>
+
+                    <button id="next-btn" onclick="app.submitAnswer()" disabled class="px-6 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl text-sm transition flex items-center gap-2 cursor-not-allowed border border-slate-700">
+                        <span data-i18n="btnNext">Next Question</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: RESULTS & SCORE CONVERSION -->
+        <section id="view-results" class="hidden space-y-8 max-w-4xl mx-auto w-full my-auto py-6">
+            
+            <div class="glass-card p-8 rounded-3xl border border-slate-700 text-center relative overflow-hidden shadow-2xl">
+                <div id="result-glow" class="absolute inset-0 bg-blue-600/10 blur-3xl pointer-events-none"></div>
+
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold mb-4">
+                    <i class="fa-solid fa-award text-amber-400"></i> <span data-i18n="resBadgeHeader">Global Assessment Complete</span>
+                </div>
+
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+                    <span data-i18n="resCongrats">Congratulations</span>, <span id="res-user-name" class="text-blue-400">Learner</span>!
+                </h2>
+                <p class="text-slate-400 text-sm max-w-lg mx-auto" data-i18n="resSubtitle">
+                    Based on your 10 adaptive questions, your American English CEFR proficiency is:
+                </p>
+
+                <div class="my-6 inline-flex flex-col items-center">
+                    <div id="res-badge-container" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-4xl sm:text-5xl shadow-xl shadow-blue-500/20 tracking-wider flex items-center gap-4 border border-white/20">
+                        <span id="res-cefr-code">B2</span>
+                        <span class="text-base font-normal opacity-75 border-l border-white/30 pl-4 text-left font-sans">
+                            <div class="font-bold uppercase tracking-wider text-xs">Official CEFR</div>
+                            <div id="res-cefr-title" class="text-sm font-semibold">Upper Intermediate</div>
+                        </span>
+                    </div>
+                </div>
+
+                <p id="res-cefr-desc" class="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    You can interact with native speakers with a high degree of fluency and spontaneity in American English.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced text-indigo-400"></i>
+                    <span data-i18n="globalEquivHeader">Estimated Global English Exam Equivalencies</span>
+                </h3>
+                <p class="text-xs text-slate-400" data-i18n="globalEquivSub">
+                    How your evaluated CEFR score maps to internationally recognized standardized tests:
+                </p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">TOEFL iBT</div>
+                        <div id="equiv-toefl" class="text-xl font-extrabold text-blue-400 my-1">72 - 94</div>
+                        <div class="text-[10px] text-slate-500">Out of 120</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">IELTS Academic</div>
+                        <div id="equiv-ielts" class="text-xl font-extrabold text-emerald-400 my-1">5.5 - 6.5</div>
+                        <div class="text-[10px] text-slate-500">Band Scale</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">Duolingo (DET)</div>
+                        <div id="equiv-det" class="text-xl font-extrabold text-purple-400 my-1">105 - 120</div>
+                        <div class="text-[10px] text-slate-500">Out of 160</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">TOEIC Listening/Reading</div>
+                        <div id="equiv-toeic" class="text-xl font-extrabold text-amber-400 my-1">785 - 940</div>
+                        <div class="text-[10px] text-slate-500">Out of 990</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Breakdown Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <h3 class="text-base font-bold text-slate-200 flex items-center justify-between">
+                        <span><i class="fa-solid fa-chart-column text-blue-400 mr-2"></i> <span data-i18n="skillBreakdownHeader">Skill Performance</span></span>
+                        <span id="res-accuracy-percent" class="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded-md font-mono">80% Accuracy</span>
+                    </h3>
+
+                    <div class="space-y-3 pt-2">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-slate-300" data-i18n="catGrammar">American Grammar & Syntax</span>
+                                <span id="score-grammar" class="text-blue-400">80%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2">
+                                <div id="bar-grammar" class="bg-blue-500 h-2 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-slate-300" data-i18n="catVocab">American Vocab & Phrasal Verbs</span>
+                                <span id="score-vocab" class="text-indigo-400">90%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2">
+                                <div id="bar-vocab" class="bg-indigo-500 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-slate-300" data-i18n="catIdioms">US Idioms & Cultural Expressions</span>
+                                <span id="score-idioms" class="text-purple-400">70%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2">
+                                <div id="bar-idioms" class="bg-purple-500 h-2 rounded-full" style="width: 70%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-slate-300" data-i18n="catListening">Listening & Pronunciation</span>
+                                <span id="score-listening" class="text-emerald-400">85%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2">
+                                <div id="bar-listening" class="bg-emerald-500 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-200 mb-4">
+                            <i class="fa-solid fa-list-check text-indigo-400 mr-2"></i> <span data-i18n="metricsHeader">Metrics</span>
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-xs text-slate-400" data-i18n="metricTotalQ">Questions</span>
+                                <span class="text-sm font-bold text-slate-200">10 / 10</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-xs text-slate-400" data-i18n="metricCorrect">Correct</span>
+                                <span id="res-correct-count" class="text-sm font-bold text-emerald-400">8</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-xs text-slate-400" data-i18n="metricPeakLevel">Peak Difficulty</span>
+                                <span id="res-peak-level" class="text-sm font-bold text-purple-400">C1</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-xs text-slate-400" data-i18n="metricAvgTime">Avg Speed</span>
+                                <span id="res-avg-time" class="text-sm font-bold text-slate-300 font-mono">14s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="app.toggleReviewModal()" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-eye text-blue-400"></i> <span data-i18n="btnReviewKey">Review Question Key</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button onclick="app.generateCertificate()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span data-i18n="btnCert">Get Verified Certificate</span>
+                </button>
+
+                <button onclick="app.resetToHome()" class="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span data-i18n="btnRetake">Retake Assessment</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: PWA INSTALLATION MODAL -->
+    <div id="modal-install" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full rounded-3xl border border-slate-700 p-6 space-y-6 shadow-2xl">
+            <div class="flex justify-between items-start">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-download"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-lg text-white">Install AmeriTest App</h3>
+                        <p class="text-xs text-slate-400">Android, Windows, macOS, and iOS</p>
+                    </div>
+                </div>
+                <button onclick="app.hideInstallModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div id="native-pwa-trigger-container" class="hidden bg-emerald-950/30 border border-emerald-500/30 p-4 rounded-xl text-center space-y-3">
+                <p class="text-xs text-emerald-300 font-medium">Your browser is ready to install AmeriTest as a native app!</p>
+                <button onclick="app.triggerNativeInstall()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-lg">
+                    <i class="fa-solid fa-download mr-2"></i> Install Now
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-xs text-slate-300 font-semibold">Or follow platform instructions:</p>
+                <div class="grid grid-cols-4 gap-1 text-[11px] font-bold text-center bg-slate-900 p-1 rounded-xl border border-slate-800">
+                    <button onclick="app.setInstallTab('android')" id="tab-android" class="py-1.5 rounded-lg bg-blue-600 text-white">Android</button>
+                    <button onclick="app.setInstallTab('windows')" id="tab-windows" class="py-1.5 rounded-lg text-slate-400 hover:text-white">Windows</button>
+                    <button onclick="app.setInstallTab('mac')" id="tab-mac" class="py-1.5 rounded-lg text-slate-400 hover:text-white">macOS</button>
+                    <button onclick="app.setInstallTab('ios')" id="tab-ios" class="py-1.5 rounded-lg text-slate-400 hover:text-white">iOS</button>
+                </div>
+                <div id="install-instruction-content" class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2"></div>
+            </div>
+
+            <div class="text-right">
+                <button onclick="app.hideInstallModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: QUESTION REVIEW MODAL -->
+    <div id="modal-review" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-3xl w-full max-h-[85vh] rounded-3xl border border-slate-700 flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-square-check text-blue-400"></i> <span data-i18n="reviewTitle">Question Key & Explanations</span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Breakdown of all 10 adaptive questions from your session</p>
+                </div>
+                <button onclick="app.toggleReviewModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="review-list" class="p-6 overflow-y-auto space-y-6 flex-1"></div>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end">
+                <button onclick="app.toggleReviewModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs border border-slate-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CERTIFICATE MODAL -->
+    <div id="modal-certificate" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-3xl w-full my-auto">
+            <div id="certificate-content" class="bg-slate-900 text-slate-100 border-8 border-indigo-900/60 p-8 sm:p-12 rounded-2xl relative shadow-2xl overflow-hidden font-sans">
+                <div class="absolute -top-32 -left-32 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-32 -right-32 w-64 h-64 bg-red-600/10 rounded-full blur-3xl"></div>
+                
+                <div class="border-2 border-indigo-500/30 p-6 sm:p-8 rounded-xl text-center space-y-6 relative z-10 bg-slate-900/80">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div class="flex items-center space-x-2 text-left">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs">US</div>
+                            <span class="font-bold text-sm tracking-widest text-slate-300 uppercase">AmeriTest Global Standard</span>
+                        </div>
+                        <span id="cert-date" class="text-xs font-mono text-slate-400">Date: August 2026</span>
+                    </div>
+
+                    <div class="space-y-2 py-2">
+                        <span class="text-xs uppercase tracking-widest font-bold text-blue-400">International Certificate of Proficiency</span>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">American English Mastery</h2>
+                        <p class="text-xs text-slate-400">This certifies that</p>
+                    </div>
+
+                    <div class="py-2">
+                        <h3 id="cert-user-name" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
+                            Learner Name
+                        </h3>
+                        <div class="w-32 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-2"></div>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                        has successfully completed the 10-Question Computerized Adaptive Assessment and demonstrated evaluated proficiency at CEFR Level:
+                    </p>
+
+                    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-extrabold text-2xl sm:text-3xl shadow-lg border border-white/20">
+                        <span id="cert-cefr-code">B2</span>
+                        <span class="text-xs font-medium border-l border-white/30 pl-3 text-left">
+                            <div class="uppercase tracking-wider opacity-80 text-[10px]">CEFR Standard</div>
+                            <div id="cert-cefr-title" class="font-bold">Upper Intermediate</div>
+                        </span>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-800 flex items-center justify-between text-left text-xs text-slate-400">
+                        <div>
+                            <div class="font-bold text-slate-300">Verification ID:</div>
+                            <div id="cert-id" class="font-mono text-[10px]">US-CEFR-88942-X</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-slate-300">Standard Framework:</div>
+                            <div class="text-[10px]">CEFR 2.0 & US English Benchmark</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-between items-center no-print">
+                <button onclick="app.printCertificate()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print / Save as PDF
+                </button>
+                <button onclick="app.toggleCertModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs border border-slate-700">
+                    Close Certificate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TRANSLATIONS = {
+            en: {
+                tagline: "Global American English Standard",
+                installApp: "Install App",
+                badgeTitle: "Global Adaptive CEFR Assessment",
+                heroTitle1: "Evaluate Your",
+                heroTitle2: "American English Level",
+                heroDesc: "Pinpoint your proficiency across CEFR levels (A1, A2, B1, B2, C1, C2) in 10 dynamic adaptive questions drawn from a 100-item global bank. Get instant equivalency mapping for TOEFL iBT, IELTS, and Duolingo.",
+                feature1Title: "CAT Adaptive Engine",
+                feature1Desc: "Questions adapt difficulty in real time to locate your exact ceiling from A1 to C2.",
+                feature2Title: "100-Question Bank",
+                feature2Desc: "Comprehensive dataset covering US grammar, idioms, vocabulary, phrasal verbs, and spoken accents.",
+                feature3Title: "Install Anywhere",
+                feature3Desc: "Install on Android, Mac, Windows, or iOS as a lightweight native desktop/mobile app.",
+                inputLabel: "Enter Your Full Name (For Global Certificate)",
+                timerOption: "Enable Timer (45s per question)",
+                btnStart: "Begin Assessment",
+                formSubtext: "10 Questions • ~3-5 Minutes • Instant Level & Score Certificate",
+                lblQuestion: "Question",
+                btnListenAudio: "Listen to Audio",
+                quizFooterNote: "Select the best American English answer.",
+                btnNext: "Next Question",
+                resBadgeHeader: "Global Assessment Complete",
+                resCongrats: "Congratulations",
+                resSubtitle: "Based on your 10 adaptive questions, your American English CEFR proficiency is:",
+                globalEquivHeader: "Estimated Global English Exam Equivalencies",
+                globalEquivSub: "How your evaluated CEFR score maps to internationally recognized standardized tests:",
+                skillBreakdownHeader: "Skill Performance",
+                catGrammar: "American Grammar & Syntax",
+                catVocab: "American Vocab & Phrasal Verbs",
+                catIdioms: "US Idioms & Cultural Expressions",
+                catListening: "Listening & Pronunciation",
+                metricsHeader: "Metrics",
+                metricTotalQ: "Questions",
+                metricCorrect: "Correct",
+                metricPeakLevel: "Peak Difficulty",
+                metricAvgTime: "Avg Speed",
+                btnReviewKey: "Review Question Key",
+                btnCert: "Get Verified Certificate",
+                btnRetake: "Retake Assessment",
+                reviewTitle: "Question Key & Explanations"
+            },
+            es: {
+                tagline: "Estándar Global de Inglés Americano",
+                installApp: "Instalar App",
+                badgeTitle: "Evaluación Adaptativa Global MCER",
+                heroTitle1: "Evalúa Tu Nivel de",
+                heroTitle2: "Inglés Americano",
+                heroDesc: "Descubre tu nivel del MCER (A1 a C2) en 10 preguntas adaptativas extraídas de un banco de 100 preguntas. Obtén equivalencias inmediatas para TOEFL iBT, IELTS y Duolingo.",
+                feature1Title: "Motor Adaptativo CAT",
+                feature1Desc: "Las preguntas ajustan su dificultad en tiempo real para evaluar tu nivel exacto.",
+                feature2Title: "Banco de 100 Preguntas",
+                feature2Desc: "Gramática, modismos, vocabulario y expresiones típicas de los Estados Unidos.",
+                feature3Title: "Instala en Cualquier Dispositivo",
+                feature3Desc: "Instálalo en Android, Mac, Windows o iOS como una aplicación nativa.",
+                inputLabel: "Ingresa tu nombre completo (Para el Certificado)",
+                timerOption: "Activar Temporizador (45s por pregunta)",
+                btnStart: "Comenzar Evaluación",
+                formSubtext: "10 Preguntas • ~3-5 Minutos • Certificado Inmediato",
+                lblQuestion: "Pregunta",
+                btnListenAudio: "Escuchar Audio",
+                quizFooterNote: "Selecciona la mejor respuesta en inglés americano.",
+                btnNext: "Siguiente Pregunta",
+                resBadgeHeader: "Evaluación Completada",
+                resCongrats: "¡Felicitaciones",
+                resSubtitle: "Según tus 10 preguntas adaptativas, tu nivel de inglés americano es:",
+                globalEquivHeader: "Equivalencias Estimadas en Exámenes Internacionales",
+                globalEquivSub: "Cómo se compara tu nivel MCER con los principales exámenes internacionales:",
+                skillBreakdownHeader: "Rendimiento por Habilidad",
+                catGrammar: "Gramática y Sintaxis",
+                catVocab: "Vocabulario y Verbos Frasales",
+                catIdioms: "Modismos y Expresiones de EE. UU.",
+                catListening: "Comprensión Auditiva y Pronunciación",
+                metricsHeader: "Métricas",
+                metricTotalQ: "Preguntas",
+                metricCorrect: "Correctas",
+                metricPeakLevel: "Dificultad Máxima",
+                metricAvgTime: "Tiempo Promedio",
+                btnReviewKey: "Revisar Respuestas",
+                btnCert: "Obtener Certificado",
+                btnRetake: "Repetir Evaluación",
+                reviewTitle: "Respuestas y Explicaciones"
+            }
+        };
+
+        const EXAM_EQUIV_MAP = {
+            'A1': { toefl: "0 - 31", ielts: "2.0 - 3.0", det: "10 - 50", toeic: "120 - 220" },
+            'A2': { toefl: "32 - 42", ielts: "3.5 - 4.5", det: "55 - 70", toeic: "225 - 545" },
+            'B1': { toefl: "43 - 71", ielts: "5.0 - 5.5", det: "75 - 100", toeic: "550 - 780" },
+            'B2': { toefl: "72 - 94", ielts: "6.0 - 7.0", det: "105 - 125", toeic: "785 - 940" },
+            'C1': { toefl: "95 - 113", ielts: "7.5 - 8.0", det: "130 - 150", toeic: "945 - 985" },
+            'C2': { toefl: "114 - 120", ielts: "8.5 - 9.0", det: "155 - 160", toeic: "990" }
+        };
+
+        const QUESTION_BANK = {
+            'A1': [
+                { id: 'a1_1', category: 'Vocabulary', prompt: "What is the common American English term for the station where you buy fuel for your car?", options: [{ text: "Gas station", correct: true }, { text: "Petrol pump", correct: false }, { text: "Fuel garage", correct: false }, { text: "Oil depot", correct: false }], explanation: "In American English, places to refuel motor vehicles are called 'gas stations'." },
+                { id: 'a1_2', category: 'Grammar', prompt: "Select the correct sentence for daily routine in American English:", options: [{ text: "She walks to work every morning at 8:00 AM.", correct: true }, { text: "She walking to work every morning at 8:00 AM.", correct: false }, { text: "She walk to work every morning at 8:00 AM.", correct: false }, { text: "She is walk to work every morning at 8:00 AM.", correct: false }], explanation: "Third-person singular simple present requires '-s' on the verb ('walks')." },
+                { id: 'a1_3', category: 'Vocabulary', prompt: "In American English, what do people usually call athletic footwear?", options: [{ text: "Sneakers", correct: true }, { text: "Trainers", correct: false }, { text: "Plimsolls", correct: false }, { text: "Dap boots", correct: false }], explanation: "Americans commonly refer to athletic shoes as 'sneakers'." },
+                { id: 'a1_4', category: 'Vocabulary', prompt: "What are sliced, fried potatoes served with a hamburger called in the United States?", options: [{ text: "French fries", correct: true }, { text: "Chips", correct: false }, { text: "Potato wedges", correct: false }, { text: "Sauté crisps", correct: false }], explanation: "In the US, fried potato strips are called 'French fries' or simply 'fries'." },
+                { id: 'a1_5', category: 'Grammar', prompt: "Complete the question: 'Where _____ you from?'", options: [{ text: "are", correct: true }, { text: "is", correct: false }, { text: "be", correct: false }, { text: "do", correct: false }], explanation: "The verb 'to be' conjugated with second-person pronoun 'you' is 'are'." },
+                { id: 'a1_6', category: 'Vocabulary', prompt: "What is the standard US term for a set of rooms on one floor where someone lives?", options: [{ text: "Apartment", correct: true }, { text: "Flat", correct: false }, { text: "Tenement", correct: false }, { text: "Bed-sit", correct: false }], explanation: "Americans use the word 'apartment' rather than 'flat'." },
+                { id: 'a1_7', category: 'Grammar', prompt: "Choose the correct sentence: 'He _____ a new blue car.'", options: [{ text: "has", correct: true }, { text: "have", correct: false }, { text: "is have", correct: false }, { text: "having", correct: false }], explanation: "Third-person singular 'he' takes 'has' in simple present possession." },
+                { id: 'a1_8', category: 'Vocabulary', prompt: "What is household waste or waste paper called in American English?", options: [{ text: "Trash / Garbage", correct: true }, { text: "Rubbish", correct: false }, { text: "Littering", correct: false }, { text: "Refuse note", correct: false }], explanation: "Waste materials are commonly called 'trash' or 'garbage' in American English." },
+                { id: 'a1_9', category: 'Phrases', prompt: "How do you ask about the time in informal American conversation?", options: [{ text: "What time is it?", correct: true }, { text: "How stands the clock?", correct: false }, { text: "What hour do we possess?", correct: false }, { text: "Which time are you having?", correct: false }], explanation: "'What time is it?' is the standard natural phrase." },
+                { id: 'a1_10', category: 'Vocabulary', prompt: "In the United States, where do you go to watch new films on a big screen?", options: [{ text: "Movie theater", correct: true }, { text: "Cinema house", correct: false }, { text: "Film hall", correct: false }, { text: "Picture house", correct: false }], explanation: "Americans call this venue a 'movie theater' or simply 'the movies'." },
+                { id: 'a1_11', category: 'Grammar', prompt: "Complete the negative statement: 'They _____ not like cold weather.'", options: [{ text: "do", correct: true }, { text: "does", correct: false }, { text: "are", correct: false }, { text: "is", correct: false }], explanation: "'They' requires the auxiliary verb 'do' for simple present negation ('do not')." },
+                { id: 'a1_12', category: 'Vocabulary', prompt: "What do Americans call a trip or break taken away from home or work?", options: [{ text: "Vacation", correct: true }, { text: "Holiday", correct: false }, { text: "Excursion break", correct: false }, { text: "Leave period", correct: false }], explanation: "Americans use 'vacation' for trips, while 'holiday' usually refers to national days like Thanksgiving." },
+                { id: 'a1_13', category: 'Vocabulary', prompt: "What is the machine that carries people up and down floors in a building called in the US?", options: [{ text: "Elevator", correct: true }, { text: "Lift", correct: false }, { text: "Hoister", correct: false }, { text: "Vertical mover", correct: false }], explanation: "In American English, it is called an 'elevator'." },
+                { id: 'a1_14', category: 'Grammar', prompt: "Complete the present continuous tense: 'I am _____ American English right now.'", options: [{ text: "studying", correct: true }, { text: "study", correct: false }, { text: "studied", correct: false }, { text: "studies", correct: false }], explanation: "Present continuous uses 'am' + present participle ('verb+ing')." },
+                { id: 'a1_15', category: 'Vocabulary', prompt: "What is the team sport played with a round black-and-white ball called in the US?", options: [{ text: "Soccer", correct: true }, { text: "Football", correct: false }, { text: "Rugby", correct: false }, { text: "Gridiron", correct: false }], explanation: "In the United States, 'football' refers to American football, while association football is 'soccer'." },
+                { id: 'a1_16', category: 'Grammar', prompt: "Choose the correct quantifier: 'Do you have _____ milk left in the fridge?'", options: [{ text: "any", correct: true }, { text: "some", correct: false }, { text: "many", correct: false }, { text: "few", correct: false }], explanation: "'Any' is standard in general questions regarding non-count nouns like milk." }
+            ],
+            'A2': [
+                { id: 'a2_1', category: 'Phrases', prompt: "Choose the standard American English sentence to request a bill at a diner:", context: "At a diner in Chicago", options: [{ text: "Could we please get the check?", correct: true }, { text: "May we have the bill note?", correct: false }, { text: "Could you fetch the total list?", correct: false }, { text: "Give us the score please.", correct: false }], explanation: "In American dining, asking for 'the check' is the standard polite formulation." },
+                { id: 'a2_2', category: 'Vocabulary', prompt: "What is the American English term for the walking path next to a street?", options: [{ text: "Sidewalk", correct: true }, { text: "Pavement", correct: false }, { text: "Footway", correct: false }, { text: "Causeway", correct: false }], explanation: "Americans call the pedestrian path beside roads a 'sidewalk'." },
+                { id: 'a2_3', category: 'Grammar', prompt: "Fill in the blank: 'We _____ to a great concert downtown last night.'", options: [{ text: "went", correct: true }, { text: "go", correct: false }, { text: "have gone", correct: false }, { text: "were going", correct: false }], explanation: "Completed actions at a specific past time require Simple Past ('went')." },
+                { id: 'a2_4', category: 'Vocabulary', prompt: "Where do Americans drop mail or letters outside on the street?", options: [{ text: "Mailbox", correct: true }, { text: "Postbox", correct: false }, { text: "Pillar box", correct: false }, { text: "Letter slot", correct: false }], explanation: "Americans use the word 'mailbox' for residential and public letter receptacles." },
+                { id: 'a2_5', category: 'Grammar', prompt: "Complete the comparative sentence: 'She is taller _____ her older brother.'", options: [{ text: "than", correct: true }, { text: "then", correct: false }, { text: "that", correct: false }, { text: "from", correct: false }], explanation: "Comparatives use 'than' to compare two items or individuals." },
+                { id: 'a2_6', category: 'Vocabulary', prompt: "What is an open outdoor area designated for parking automobiles called in the US?", options: [{ text: "Parking lot", correct: true }, { text: "Car park", correct: false }, { text: "Auto ground", correct: false }, { text: "Vehicle bay", correct: false }], explanation: "Americans call designated parking grounds a 'parking lot'." },
+                { id: 'a2_7', category: 'Grammar', prompt: "Choose the correct quantifier for an uncountable noun: 'How _____ water do you drink?'", options: [{ text: "much", correct: true }, { text: "many", correct: false }, { text: "lot", correct: false }, { text: "few", correct: false }], explanation: "'Much' is used with uncountable nouns like water." },
+                { id: 'a2_8', category: 'Vocabulary', prompt: "What is the standard American term for a portable personal telephone?", options: [{ text: "Cell phone", correct: true }, { text: "Mobile phone", correct: false }, { text: "Hand phone", correct: false }, { text: "Pocket wireless", correct: false }], explanation: "Americans almost universally say 'cell phone' or simply 'cell'." },
+                { id: 'a2_9', category: 'Grammar', prompt: "Complete the first conditional: 'If it rains tomorrow, we _____ stay inside.'", options: [{ text: "will", correct: true }, { text: "would", correct: false }, { text: "did", correct: false }, { text: "were", correct: false }], explanation: "First conditional structure: 'If + present tense ..., will + base verb'." },
+                { id: 'a2_10', category: 'Phrases', prompt: "In American English, how do you describe waiting in sequence behind other people?", options: [{ text: "Standing in line", correct: true }, { text: "Standing in queue", correct: false }, { text: "Waiting in row", correct: false }, { text: "Queuing up", correct: false }], explanation: "Americans say 'standing in line' or 'getting in line'." },
+                { id: 'a2_11', category: 'Grammar', prompt: "Fill in the blank: 'I have worked at this company _____ three years.'", options: [{ text: "for", correct: true }, { text: "since", correct: false }, { text: "during", correct: false }, { text: "from", correct: false }], explanation: "'For' expresses the duration or period of time (three years)." },
+                { id: 'a2_12', category: 'Vocabulary', prompt: "What is a major high-speed multi-lane road called in the US?", options: [{ text: "Freeway / Highway", correct: true }, { text: "Motorway", correct: false }, { text: "Dual carriageway", correct: false }, { text: "Autobahn street", correct: false }], explanation: "In the United States, major highways with multiple lanes are called 'freeways' or 'highways'." },
+                { id: 'a2_13', category: 'Grammar', prompt: "Select the correct adverb: 'He drives very _____ on icy winter roads.'", options: [{ text: "carefully", correct: true }, { text: "careful", correct: false }, { text: "carefulness", correct: false }, { text: "more careful", correct: false }], explanation: "Adverbs of manner ending in '-ly' modify verbs ('drives carefully')." },
+                { id: 'a2_14', category: 'Vocabulary', prompt: "In American English, where do you buy food items like fruit, cereal, and meat?", options: [{ text: "Grocery store", correct: true }, { text: "Provision shop", correct: false }, { text: "Food mart house", correct: false }, { text: "Greengrocer hall", correct: false }], explanation: "Americans buy food items at a 'grocery store' or 'supermarket'." },
+                { id: 'a2_15', category: 'Grammar', prompt: "Choose the correct past continuous pairing: 'While I was cooking, the phone _____.'", options: [{ text: "rang", correct: true }, { text: "was ringing", correct: false }, { text: "has rung", correct: false }, { text: "rings", correct: false }], explanation: "An interrupting single past event uses simple past ('rang') during a continuous action." },
+                { id: 'a2_16', category: 'Vocabulary', prompt: "What is an underground electric railway system called in American cities like New York?", options: [{ text: "Subway", correct: true }, { text: "Underground", correct: false }, { text: "The Tube", correct: false }, { text: "Metro line rail", correct: false }], explanation: "In American urban centers, underground rail systems are called 'subways'." },
+                { id: 'a2_17', category: 'Grammar', prompt: "Complete the life experience question: 'Have you ever _____ to California?'", options: [{ text: "been", correct: true }, { text: "went", correct: false }, { text: "gone to be", correct: false }, { text: "go", correct: false }], explanation: "Present perfect for life experience uses 'have you ever been'." }
+            ],
+            'B1': [
+                { id: 'b1_1', category: 'Phrasal Verbs', prompt: "What does the American expression 'to catch up with someone' mean?", options: [{ text: "To talk with someone you haven't seen in a while to exchange news", correct: true }, { text: "To physically run after someone and tackle them", correct: false }, { text: "To pay someone money you owe them", correct: false }, { text: "To argue about past mistakes", correct: false }], explanation: "'Catching up' means conversing to get updated on each other's lives." },
+                { id: 'b1_2', category: 'Vocabulary', prompt: "In American English, what is the 'trunk' of a car?", options: [{ text: "The rear enclosed storage compartment", correct: true }, { text: "The front engine cover", correct: false }, { text: "The steering wheel section", correct: false }, { text: "The exhaust pipe", correct: false }], explanation: "The rear storage space of a vehicle is called the 'trunk' in US English." },
+                { id: 'b1_3', category: 'Grammar', prompt: "Choose the standard American option: 'I _____ in Los Angeles for five years now.'", options: [{ text: "have lived", correct: true }, { text: "live", correct: false }, { text: "am living", correct: false }, { text: "was living", correct: false }], explanation: "Action starting in the past and continuing to present uses Present Perfect ('have lived')." },
+                { id: 'b1_4', category: 'Phrasal Verbs', prompt: "If a baseball game is 'called off' due to rain, what happened?", options: [{ text: "It was canceled", correct: true }, { text: "It was postponed to next year", correct: false }, { text: "It was moved indoors", correct: false }, { text: "It started late", correct: false }], explanation: "The phrasal verb 'call off' means to cancel an event." },
+                { id: 'b1_5', category: 'Vocabulary', prompt: "What do Americans call the metal cover over the engine of a car?", options: [{ text: "Hood", correct: true }, { text: "Bonnet", correct: false }, { text: "Cowl", correct: false }, { text: "Front flap", correct: false }], explanation: "In American English, the engine cover is called the 'hood'." },
+                { id: 'b1_6', category: 'Phrasal Verbs', prompt: "If you need to 'figure out' a problem, what are you doing?", options: [{ text: "Solving or understanding it through thought", correct: true }, { text: "Drawing a picture of it", correct: false }, { text: "Ignoring it completely", correct: false }, { text: "Delegating it to a subordinate", correct: false }], explanation: "'Figure out' means to understand or solve something." },
+                { id: 'b1_7', category: 'Grammar', prompt: "Select the correct connector: '_____ it was raining heavily, we decided to go hiking.'", options: [{ text: "Although", correct: true }, { text: "Despite", correct: false }, { text: "Because", correct: false }, { text: "In spite", correct: false }], explanation: "'Although' introduces a clause of concession ('Although + subject + verb')." },
+                { id: 'b1_8', category: 'Idioms', prompt: "What does it mean when someone says, 'I am feeling under the weather'?", options: [{ text: "Feeling slightly sick or unwell", correct: true }, { text: "Feeling nervous about storm clouds", correct: false }, { text: "Feeling excited about outdoor plans", correct: false }, { text: "Feeling cold without a jacket", correct: false }], explanation: "'Under the weather' is a widely used idiom meaning slightly ill." },
+                { id: 'b1_9', category: 'Grammar', prompt: "Complete the sentence: 'I am used to _____ up at 6:00 AM every day.'", options: [{ text: "waking", correct: true }, { text: "wake", correct: false }, { text: "waked", correct: false }, { text: "woke", correct: false }], explanation: "The structure 'be used to' is followed by a gerund ('-ing' form)." },
+                { id: 'b1_10', category: 'Phrasal Verbs', prompt: "What does it mean if your car 'runs out of' gas?", options: [{ text: "It has completely used up its fuel supply", correct: true }, { text: "Gas is leaking out of the tank", correct: false }, { text: "The engine is producing smoke", correct: false }, { text: "It is driving faster than expected", correct: false }], explanation: "'Run out of' means to deplete or exhaust the supply of something." },
+                { id: 'b1_11', category: 'Vocabulary', prompt: "What is the front glass window of an automobile called in American English?", options: [{ text: "Windshield", correct: true }, { text: "Windscreen", correct: false }, { text: "Front shield", correct: false }, { text: "Glass pane", correct: false }], explanation: "Americans call the front glass window of a car a 'windshield'." },
+                { id: 'b1_12', category: 'Grammar', prompt: "Choose the correct modal phrase: 'You had better _____ your seatbelt before driving.'", options: [{ text: "fasten", correct: true }, { text: "to fasten", correct: false }, { text: "fastening", correct: false }, { text: "fastened", correct: false }], explanation: "'Had better' is followed by the bare infinitive ('fasten')." },
+                { id: 'b1_13', category: 'Phrasal Verbs', prompt: "If an applicant 'turns down' a job offer, what did they do?", options: [{ text: "They rejected or declined it", correct: true }, { text: "They accepted it immediately", correct: false }, { text: "They postponed the interview date", correct: false }, { text: "They asked for higher wages", correct: false }], explanation: "'Turn down' means to refuse or decline an offer or request." },
+                { id: 'b1_14', category: 'Idioms', prompt: "What does the common US idiom 'a dime a dozen' mean?", options: [{ text: "Very common and easy to obtain, thus low in value", correct: true }, { text: "Extremely expensive and rare", correct: false }, { text: "Worth exactly ten cents per package", correct: false }, { text: "Hard to find in physical stores", correct: false }], explanation: "Something described as 'a dime a dozen' is very ordinary and common." },
+                { id: 'b1_15', category: 'Grammar', prompt: "Complete the sentence: 'I look forward to _____ you at the conference.'", options: [{ text: "seeing", correct: true }, { text: "see", correct: false }, { text: "saw", correct: false }, { text: "have seen", correct: false }], explanation: "'Look forward to' requires a gerund ('seeing') because 'to' is a preposition here." },
+                { id: 'b1_16', category: 'Vocabulary', prompt: "What is the marked place on a street where pedestrians have the right to cross called in the US?", options: [{ text: "Crosswalk", correct: true }, { text: "Zebra crossing", correct: false }, { text: "Pedestrian strip", correct: false }, { text: "Foot lane", correct: false }], explanation: "In American English, pedestrian street crossings are called 'crosswalks'." },
+                { id: 'b1_17', category: 'Phrasal Verbs', prompt: "If a car 'breaks down' on the freeway, what has happened?", options: [{ text: "It suffered a mechanical failure and stopped working", correct: true }, { text: "It crashed into a wall", correct: false }, { text: "It ran out of washer fluid", correct: false }, { text: "It sped up dangerously", correct: false }], explanation: "'Break down' refers to mechanical failure of machinery or vehicles." }
+            ],
+            'B2': [
+                { id: 'b2_1', category: 'Idioms', prompt: "If your coworker says, 'Let us play it by ear regarding the meeting,' what do they mean?", options: [{ text: "Let us make a flexible decision as the situation develops", correct: true }, { text: "Let us listen to music during the meeting", correct: false }, { text: "Let us cancel the meeting immediately", correct: false }, { text: "Let us vote silently by raising hands", correct: false }], explanation: "'Play it by ear' means to improvise or decide based on circumstances." },
+                { id: 'b2_2', category: 'Listening / Idioms', hasAudio: true, audioText: "I am feeling a little under the weather today, so I think I will take a rain check on dinner.", prompt: "Listen to the spoken sentence. What does 'take a rain check' mean?", options: [{ text: "Politely decline an offer now with the expectation of rescheduling later", correct: true }, { text: "Check the local weather forecast before going outside", correct: false }, { text: "Pay for dinner using a physical paper check", correct: false }, { text: "Demand an instant refund due to bad service", correct: false }], explanation: "'Take a rain check' means to postpone an invitation for a future date." },
+                { id: 'b2_3', category: 'Grammar', prompt: "Select the sentence with proper high-intermediate conditional grammar:", options: [{ text: "If I had known about the job opening in Seattle, I would have applied.", correct: true }, { text: "If I knew about the job opening in Seattle, I would apply yesterday.", correct: false }, { text: "If I have known about the job opening, I would had applied.", correct: false }, { text: "If I would know about the job opening, I had applied.", correct: false }], explanation: "Third Conditional: 'If + past perfect ..., would + have + past participle'." },
+                { id: 'b2_4', category: 'Idioms', prompt: "What does it mean to 'bite the bullet' in American business culture?", options: [{ text: "To force yourself to undergo an unpleasant situation with courage", correct: true }, { text: "To act aggressively towards competitors", correct: false }, { text: "To make a careless mistake on a financial report", correct: false }, { text: "To quit a job without notice", correct: false }], explanation: "'Bite the bullet' means facing a painful or difficult situation bravely." },
+                { id: 'b2_5', category: 'Idioms', prompt: "If someone 'hits the nail on the head', what have they done?", options: [{ text: "Described or identified a situation with exact precision", correct: true }, { text: "Caused minor property damage", correct: false }, { text: "Accidentally injured themselves at work", correct: false }, { text: "Exaggerated a story beyond belief", correct: false }], explanation: "'Hitting the nail on the head' means saying or doing something exactly right." },
+                { id: 'b2_6', category: 'Idioms', prompt: "When a company is accused of 'cutting corners', what are they doing?", options: [{ text: "Doing something in a hasty or cheap way to save time or money", correct: true }, { text: "Physically remodeling their corporate headquarters", correct: false }, { text: "Hiring top executives from rival firms", correct: false }, { text: "Expanding into international markets", correct: false }], explanation: "'Cutting corners' refers to taking shortcuts that compromise quality or safety." },
+                { id: 'b2_7', category: 'Vocabulary', prompt: "Choose the word that best completes this sentence: 'No matter how hard he tried, he could not _____ the steep obstacle.'", options: [{ text: "surmount", correct: true }, { text: "surrender", correct: false }, { text: "submerge", correct: false }, { text: "supersede", correct: false }], explanation: "'Surmount' means to overcome or climb over a difficulty or obstacle." },
+                { id: 'b2_8', category: 'Idioms', prompt: "What does 'break the ice' mean in a professional seminar?", options: [{ text: "To relieve tension and initiate conversation among strangers", correct: true }, { text: "To serve cold refreshments during a intermission", correct: false }, { text: "To criticize a colleague's presentation", correct: false }, { text: "To end a meeting ahead of schedule", correct: false }], explanation: "'Break the ice' means making people feel comfortable with each other." },
+                { id: 'b2_9', category: 'Idioms', prompt: "If your friend 'spills the beans', what did they do?", options: [{ text: "Revealed secret or confidential information prematurely", correct: true }, { text: "Messed up a cooking recipe", correct: false }, { text: "Spent money recklessly", correct: false }, { text: "Arrived late to a dinner party", correct: false }], explanation: "'Spill the beans' means to disclose a secret." },
+                { id: 'b2_10', category: 'Idioms', prompt: "What does it mean to 'burn the midnight oil'?", options: [{ text: "To work or study late into the night", correct: true }, { text: "To waste fuel unnecessarily", correct: false }, { text: "To ruin an expensive electrical appliance", correct: false }, { text: "To host a night outdoor barbecue", correct: false }], explanation: "'Burn the midnight oil' means working late past midnight." },
+                { id: 'b2_11', category: 'Grammar', prompt: "Select the sentence expressing an unreal past wish: 'I wish I _____ more time to study for the GMAT exam last month.'", options: [{ text: "had had", correct: true }, { text: "have had", correct: false }, { text: "would have", correct: false }, { text: "having", correct: false }], explanation: "Wishes about past regrets take past perfect ('had had')." },
+                { id: 'b2_12', category: 'Vocabulary', prompt: "In US business jargon, what is a 'ballpark figure'?", options: [{ text: "An approximate numerical estimate", correct: true }, { text: "An exact accounting audit statement", correct: false }, { text: "The stadium capacity for sports events", correct: false }, { text: "A price quotation with zero tax", correct: false }], explanation: "A 'ballpark figure' is a rough, high-level numerical estimate." },
+                { id: 'b2_13', category: 'Idioms', prompt: "If a voter is 'on the fence' about two political candidates, what is their status?", options: [{ text: "Undecided and neutral between choices", correct: true }, { text: "Strongly protesting against both candidates", correct: false }, { text: "Actively organizing a campaign event", correct: false }, { text: "Disqualified from voting", correct: false }], explanation: "Being 'on the fence' means remaining undecided between two options." },
+                { id: 'b2_14', category: 'Grammar', prompt: "Complete the sequence of tenses: 'By the time we arrived at the venue, the show _____.'", options: [{ text: "had already started", correct: true }, { text: "has already started", correct: false }, { text: "was already starting", correct: false }, { text: "already starts", correct: false }], explanation: "An action completed prior to a past reference point requires past perfect ('had started')." },
+                { id: 'b2_15', category: 'Idioms', prompt: "What does it mean to quit a bad habit 'cold turkey'?", options: [{ text: "Abruptly and completely stopping without tapering off", correct: true }, { text: "Gradually reducing consumption over several months", correct: false }, { text: "Substituting one bad habit for another", correct: false }, { text: "Eating cold meals during therapy", correct: false }], explanation: "Quitting 'cold turkey' means immediate, complete cessation of an addictive behavior." },
+                { id: 'b2_16', category: 'Grammar', prompt: "Identify the sentence with correct inverted structure: 'Not only _____ the test, but she also scored top marks.'", options: [{ text: "did she pass", correct: true }, { text: "she passed", correct: false }, { text: "she did pass", correct: false }, { text: "passed she", correct: false }], explanation: "Inversion after 'Not only' requires auxiliary before subject ('did she pass')." },
+                { id: 'b2_17', category: 'Idioms', prompt: "What does 'touch base' mean in American corporate correspondence?", options: [{ text: "Briefly contact someone to catch up or align on progress", correct: true }, { text: "Schedule a mandatory physical meeting in person", correct: false }, { text: "Sign a formal legally binding agreement", correct: false }, { text: "Terminate a business partnership", correct: false }], explanation: "'Touch base' comes from baseball, meaning making quick contact to check status." }
+            ],
+            'C1': [
+                { id: 'c1_1', category: 'Grammar', prompt: "Identify the grammatically precise sentence using the formal American subjunctive mood:", options: [{ text: "The board requested that the manager be present at the hearing.", correct: true }, { text: "The board requested that the manager is present at the hearing.", correct: false }, { text: "The board requested that the manager was present at the hearing.", correct: false }, { text: "The board requested that the manager will be present at the hearing.", correct: false }], explanation: "Verbs like request or insist take base subjunctive form ('be') in formal American English." },
+                { id: 'c1_2', category: 'Idioms', prompt: "In high-level debate, what does playing devil's advocate involve?", options: [{ text: "Arguing an opposing point of view for the sake of thorough examination", correct: true }, { text: "Promoting unethical practices in corporate governance", correct: false }, { text: "Insulting an opponent during an argument", correct: false }, { text: "Refusing to adhere to established debate rules", correct: false }], explanation: "Playing devil's advocate means taking an opposite stand to test arguments." },
+                { id: 'c1_3', category: 'Listening', hasAudio: true, audioText: "Scarcely had the keynote speaker stepped up to the podium when the fire alarm sounded.", prompt: "Listen to the audio. Which grammatical structure is utilized here?", options: [{ text: "Negative inversion for rhetorical emphasis", correct: true }, { text: "Passive causative structure", correct: false }, { text: "Elliptical imperative clause", correct: false }, { text: "Simple past continuous aspect", correct: false }], explanation: "'Scarcely had [subject] [verb] when...' is an inverted literary clause structure." },
+                { id: 'c1_4', category: 'Idioms', prompt: "What does it mean to 'throw someone under the bus' in political discourse?", options: [{ text: "To blame or sacrifice an associate to save oneself from criticism", correct: true }, { text: "To physically push someone into traffic", correct: false }, { text: "To offer unexpected financial assistance to a partner", correct: false }, { text: "To congratulate a rival publicly", correct: false }], explanation: "'Throw under the bus' means betraying a colleague to protect one's self-interest." },
+                { id: 'c1_5', category: 'Idioms', prompt: "If an investigation is 'barking up the wrong tree', what is occurring?", options: [{ text: "Following a completely mistaken line of thought or inquiry", correct: true }, { text: "Making loud unnecessary noise during proceedings", correct: false }, { text: "Uncovering forgotten historical records", correct: false }, { text: "Conducting research in rural forestry", correct: false }], explanation: "'Barking up the wrong tree' means pursuing a wrong lead or misunderstanding a situation." },
+                { id: 'c1_6', category: 'Vocabulary', prompt: "Select the sentence using 'notwithstanding' correctly:", options: [{ text: "Notwithstanding the severe headwinds, the aircraft landed safely.", correct: true }, { text: "The team won notwithstanding they played poorly.", correct: false }, { text: "Notwithstanding of the rain, the event proceeded.", correct: false }, { text: "He went notwithstanding to the office.", correct: false }], explanation: "'Notwithstanding' functions as a preposition meaning 'in spite of' followed by a noun phrase." },
+                { id: 'c1_7', category: 'Idioms', prompt: "When negotiators complain that the opposing side is 'moving the goalposts', what do they mean?", options: [{ text: "Unfairly altering the conditions or rules of an agreement during the process", correct: true }, { text: "Relocating physical sporting equipment", correct: false }, { text: "Demanding shorter contract durations", correct: false }, { text: "Refusing to meet face-to-face", correct: false }], explanation: "'Moving the goalposts' means shifting requirements to make success unfairly difficult." },
+                { id: 'c1_8', category: 'Vocabulary', prompt: "Choose the word that best completes this formal passage: 'The audit aimed to _____ light on complex financial discrepancies.'", options: [{ text: "shed", correct: true }, { text: "castigate", correct: false }, { text: "diffuse", correct: false }, { text: "project", correct: false }], explanation: "The standard collocated phrase is 'to shed light on' something." },
+                { id: 'c1_9', category: 'Grammar', prompt: "Identify the correct usage of 'inasmuch as':", options: [{ text: "The motion passed, inasmuch as the majority voted in favor.", correct: true }, { text: "Inasmuch as tomorrow is sunny, we went swimming.", correct: false }, { text: "Inasmuch as you like coffee or tea?", correct: false }, { text: "He ran inasmuch fast as possible.", correct: false }], explanation: "'Inasmuch as' introduces a clause giving a reason or explanation ('since' / 'considering that')." },
+                { id: 'c1_10', category: 'Vocabulary', prompt: "What does it mean if an institution is described as 'steeped in history'?", options: [{ text: "Richly saturated with historical traditions and significance", correct: true }, { text: "Lacking historical documentation", correct: false }, { text: "Failing due to outdated policies", correct: false }, { text: "Built inside an ancient castle ruin", correct: false }], explanation: "'Steeped in' means thoroughly soaked or imbued with a particular quality." },
+                { id: 'c1_11', category: 'Idioms', prompt: "If a company keeps financial ruin 'at bay', what have they accomplished?", options: [{ text: "Prevented a threatening problem from coming near or harming them", correct: true }, { text: "Invested money in maritime real estate", correct: false }, { text: "Filed for Chapter 11 bankruptcy", correct: false }, { text: "Exchanged national currency for offshore assets", correct: false }], explanation: "To keep something 'at bay' means holding off or delaying a threat." },
+                { id: 'c1_12', category: 'Grammar', prompt: "Select the correct mixed conditional sentence:", options: [{ text: "If he had taken the early flight yesterday, he would be present at the summit now.", correct: true }, { text: "If he took the early flight yesterday, he will be present at the summit now.", correct: false }, { text: "If he has taken the early flight yesterday, he is present at the summit now.", correct: false }, { text: "If he had taken the early flight yesterday, he was present at the summit now.", correct: false }], explanation: "Mixed conditional connects past unreal condition ('had taken') with present result ('would be')." },
+                { id: 'c1_13', category: 'Idioms', prompt: "What does it mean to take rumor reports 'with a grain of salt'?", options: [{ text: "To maintain skepticism and not accept them as fully true", correct: true }, { text: "To season food while listening to news", correct: false }, { text: "To memorize details with total accuracy", correct: false }, { text: "To distribute rumors to colleagues", correct: false }], explanation: "To take something 'with a grain of salt' means viewing it with healthy doubt." },
+                { id: 'c1_14', category: 'Vocabulary', prompt: "Choose the term that best fits: 'Management must remain fully _____ of changing regulatory frameworks.'", options: [{ text: "cognizant", correct: true }, { text: "cognate", correct: false }, { text: "congruent", correct: false }, { text: "consequential", correct: false }], explanation: "'Cognizant' means having knowledge or being aware of something." },
+                { id: 'c1_15', category: 'Idioms', prompt: "If two executives are 'at loggerheads' over strategy, what is their relationship?", options: [{ text: "In stubborn, persistent disagreement", correct: true }, { text: "Working in flawless harmony", correct: false }, { text: "Competing in a casual golf tournament", correct: false }, { text: "Planning a merger together", correct: false }], explanation: "Being 'at loggerheads' means locked in strong conflict or dispute." },
+                { id: 'c1_16', category: 'Grammar', prompt: "Choose the correct formal concession phrase: '_____ as it may, we must proceed with the product launch.'", options: [{ text: "Be that", correct: true }, { text: "As it be", correct: false }, { text: "Being that", correct: false }, { text: "Which be", correct: false }], explanation: "'Be that as it may' is an established formal idiom meaning 'nevertheless / despite that'." },
+                { id: 'c1_17', category: 'Phrasal Verbs', prompt: "What does 'gloss over' mean in corporate crisis management?", options: [{ text: "To treat or describe a problem lightly to minimize its perceived importance", correct: true }, { text: "To polish furniture before an audit", correct: false }, { text: "To thoroughly analyze every mistake in detail", correct: false }, { text: "To publish an immaculate annual report", correct: false }], explanation: "'Gloss over' means avoiding detailed discussion of mistakes or unpleasant facts." }
+            ],
+            'C2': [
+                { id: 'c2_1', category: 'Vocabulary', prompt: "Choose the word that best completes this sentence: 'Her proposal was met with an array of subtle _____ that required careful decoding.'", options: [{ text: "nuances", correct: true }, { text: "redundancies", correct: false }, { text: "obsoletions", correct: false }, { text: "plagiarisms", correct: false }], explanation: "'Nuances' refers to subtle distinctions or shades of meaning." },
+                { id: 'c2_2', category: 'Idioms', prompt: "What does the high-level idiom 'to throw down the gauntlet' mean?", options: [{ text: "To issue a formal challenge or confrontation", correct: true }, { text: "To surrender unconditionally in an argument", correct: false }, { text: "To discard heavy winter clothing", correct: false }, { text: "To reveal a secret strategy prematurely", correct: false }], explanation: "'Throwing down the gauntlet' means issuing a direct challenge." },
+                { id: 'c2_3', category: 'Grammar', prompt: "Select the sentence showing absolute mastery of complex hypotheticals:", options: [{ text: "Had it not been for the swift intervention of authorities, the crisis would have escalated drastically.", correct: true }, { text: "Were it not for the swift intervention, the crisis escalated drastically.", correct: false }, { text: "Had it not been for the intervention, the crisis had escalated.", correct: false }, { text: "If it was not for the swift intervention, the crisis would escalate.", correct: false }], explanation: "Inverted past hypothetical: 'Had it not been for...' paired with 'would have + past participle'." },
+                { id: 'c2_4', category: 'Vocabulary', prompt: "Select the precise antonym of 'pusillanimous':", options: [{ text: "Courageous", correct: true }, { text: "Timid", correct: false }, { text: "Craven", correct: false }, { text: "Hesitant", correct: false }], explanation: "'Pusillanimous' means lacking courage; its antonym is courageous." },
+                { id: 'c2_5', category: 'Idioms', prompt: "What does the literary expression 'to gild the lily' denote?", options: [{ text: "To add unnecessary ornamentation to something already intrinsically beautiful", correct: true }, { text: "To plant expensive flowers in a botanical garden", correct: false }, { text: "To repair a broken antique with gold leaf", correct: false }, { text: "To flatter a high official insincerely", correct: false }], explanation: "'Gilding the lily' means trying to improve something that is already fine as it is." },
+                { id: 'c2_6', category: 'Vocabulary', prompt: "Which word denotes something existing or being present everywhere simultaneously?", options: [{ text: "Ubiquitous", correct: true }, { text: "Ephemeral", correct: false }, { text: "Vicarious", correct: false }, { text: "Fastidious", correct: false }], explanation: "'Ubiquitous' means present, appearing, or found everywhere." },
+                { id: 'c2_7', category: 'Idioms', prompt: "What does the expression 'a fly in the ointment' refer to?", options: [{ text: "A single minor drawback or flaw that spoils an otherwise pleasant situation", correct: true }, { text: "A serious medical complication during surgery", correct: false }, { text: "An uninvited guest at a formal dinner", correct: false }, { text: "A minor clerical typo on a legal deed", correct: false }], explanation: "'A fly in the ointment' is a small detail that ruins something good." },
+                { id: 'c2_8', category: 'Vocabulary', prompt: "What does it mean when a political spokesperson 'equivocates' during a press conference?", options: [{ text: "Uses ambiguous language intentionally to conceal the truth or avoid commitment", correct: true }, { text: "Speaks with absolute mathematical precision and logic", correct: false }, { text: "Shouts loudly to overpower journalists", correct: false }, { text: "Translates statements into multiple foreign languages", correct: false }], explanation: "'Equivocate' means using vague, ambiguous language to hide the truth." },
+                { id: 'c2_9', category: 'Idioms', prompt: "What characterizes an individual described as 'penny-wise and pound-foolish'?", options: [{ text: "Extremely careful with small sums of money while squandering large sums foolishly", correct: true }, { text: "Generous to charity while living frugally", correct: false }, { text: "Proficient in foreign currencies and global exchange rates", correct: false }, { text: "Obsessed with weight loss and fitness regimes", correct: false }], explanation: "Being 'penny-wise and pound-foolish' means stingy in small matters but wasteful in major ones." },
+                { id: 'c2_10', category: 'Vocabulary', prompt: "Choose the word describing behavior that is excessively obsequious or flattering toward superiors:", options: [{ text: "Sycophantic", correct: true }, { text: "Philanthropic", correct: false }, { text: "Iconoclastic", correct: false }, { text: "Quixotic", correct: false }], explanation: "'Sycophantic' describes servile self-seeking flattery." },
+                { id: 'c2_11', category: 'Idioms', prompt: "What is a 'Pyrrhic victory'?", options: [{ text: "A victory won at such a devastating cost that it is tantamount to defeat", correct: true }, { text: "A decisive military triumph celebrated worldwide", correct: false }, { text: "A victory achieved through unexpected diplomatic compromise", correct: false }, { text: "An undisputed sporting championship win", correct: false }], explanation: "A 'Pyrrhic victory' is a win heavy with severe losses and damage." },
+                { id: 'c2_12', category: 'Vocabulary', prompt: "What does 'vicissitudes' mean in economic or philosophical contexts?", options: [{ text: "Unpredictable changes or alternations of fortune and circumstance", correct: true }, { text: "Rigid legal mandates that cannot be modified", correct: false }, { text: "Harmonious balance between economic sectors", correct: false }, { text: "Historical artifacts preserved in museum archives", correct: false }], explanation: "'Vicissitudes' refers to unwelcome shifts or changes in life or fortune." },
+                { id: 'c2_13', category: 'Idioms', prompt: "What is someone doing when they are 'grasping at straws' during a defense?", options: [{ text: "Desperately trying to find any pretext or argument, no matter how weak", correct: true }, { text: "Selecting drinks at a social event", correct: false }, { text: "Constructing physical models out of wooden materials", correct: false }, { text: "Presenting overwhelming empirical evidence", correct: false }], explanation: "'Grasping at straws' means resorting to desperate, hopeless attempts to save a situation." },
+                { id: 'c2_14', category: 'Phrasal Verbs', prompt: "What does it mean to 'curry favor' with an executive?", options: [{ text: "To seek to gain favor or advantage through flattery or attentive behavior", correct: true }, { text: "To cook traditional Indian cuisine for office parties", correct: false }, { text: "To demand an immediate promotion backed by union threats", correct: false }, { text: "To challenge executive policy in public board meetings", correct: false }], explanation: "To 'curry favor' means attempting to gain someone's approval by pleasing or flattering them." },
+                { id: 'c2_15', category: 'Vocabulary', prompt: "Select the word that best fits: 'The author was so _____ about syntax that she revised her manuscript twenty times.'", options: [{ text: "fastidious", correct: true }, { text: "phlegmatic", correct: false }, { text: "capricious", correct: false }, { text: "indolent", correct: false }], explanation: "'Fastidious' means very attentive to and concerned about accuracy and detail." },
+                { id: 'c2_16', category: 'Vocabulary', prompt: "What does the scholarly term 'inchoate' mean when describing an idea?", options: [{ text: "Just begun and so not fully formed or developed", correct: true }, { text: "Completely obsolete and rejected by scientists", correct: false }, { text: "Universally proven as scientific law", correct: false }, { text: "Extremely controversial and dangerous", correct: false }], explanation: "'Inchoate' means rudimentary or in an initial stage of development." }
+            ]
+        };
+
+        const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        const LEVEL_DETAILS = {
+            'A1': { name: "Beginner", title: "A1 - Beginner" },
+            'A2': { name: "Elementary", title: "A2 - Elementary" },
+            'B1': { name: "Intermediate", title: "B1 - Intermediate" },
+            'B2': { name: "Upper Intermediate", title: "B2 - Upper Intermediate" },
+            'C1': { name: "Advanced", title: "C1 - Advanced" },
+            'C2': { name: "Proficient / Mastery", title: "C2 - Mastery" }
+        };
+
+        class AmericanCEFRApp {
+            constructor() {
+                this.currentLang = 'en';
+                this.userName = "Learner";
+                this.timerEnabled = true;
+                this.audioEnabled = true;
+                
+                this.currentQuestionIndex = 0;
+                this.currentLevelIdx = 1; // Start at A2
+                this.testHistory = [];
+                this.usedQuestionIds = new Set();
+                
+                this.selectedOptionIdx = null;
+                this.timerInterval = null;
+                this.timeLeft = 45;
+                
+                this.deferredPrompt = null;
+                
+                this.initSpeechSynth();
+                this.initPWA();
+            }
+
+            initPWA() {
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));";
+                        const blob = new Blob([swCode], { type: 'text/javascript' });
+                        const swUrl = URL.createObjectURL(blob);
+                        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration skipped', err));
+                    } catch (e) {
+                        console.log('PWA Service Worker init skipped', e);
+                    }
+                }
+
+                try {
+                    const manifest = {
+                        name: "AmeriTest Global - CEFR Assessment",
+                        short_name: "AmeriTest",
+                        start_url: ".",
+                        display: "standalone",
+                        background_color: "#0f172a",
+                        theme_color: "#0f172a",
+                        icons: [
+                            { src: "https://placehold.co/192x192/0a2540/ffffff?text=US", sizes: "192x192", type: "image/png" },
+                            { src: "https://placehold.co/512x512/0a2540/ffffff?text=US", sizes: "512x512", type: "image/png" }
+                        ]
+                    };
+                    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                    const manifestUrl = URL.createObjectURL(manifestBlob);
+                    const link = document.createElement('link');
+                    link.rel = 'manifest';
+                    link.href = manifestUrl;
+                    document.head.appendChild(link);
+                } catch(e) {
+                    console.log('Manifest injection skipped', e);
+                }
+
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    const triggerContainer = document.getElementById('native-pwa-trigger-container');
+                    if (triggerContainer) triggerContainer.classList.remove('hidden');
+                });
+            }
+
+            showInstallModal() {
+                document.getElementById('modal-install').classList.remove('hidden');
+                this.setInstallTab('android');
+            }
+
+            hideInstallModal() {
+                document.getElementById('modal-install').classList.add('hidden');
+            }
+
+            triggerNativeInstall() {
+                if (this.deferredPrompt) {
+                    this.deferredPrompt.prompt();
+                    this.deferredPrompt.userChoice.then(() => {
+                        this.deferredPrompt = null;
+                        this.hideInstallModal();
+                    });
+                }
+            }
+
+            setInstallTab(platform) {
+                const tabs = ['android', 'windows', 'mac', 'ios'];
+                tabs.forEach(t => {
+                    const btn = document.getElementById('tab-' + t);
+                    if (btn) {
+                        btn.className = (t === platform) ? "py-1.5 rounded-lg bg-blue-600 text-white" : "py-1.5 rounded-lg text-slate-400 hover:text-white";
+                    }
+                });
+
+                const content = document.getElementById('install-instruction-content');
+                if (!content) return;
+
+                if (platform === 'android') {
+                    content.innerHTML = `<p class="font-bold text-white mb-1"><i class="fa-brands fa-android text-emerald-400 mr-1"></i> Android (Google Chrome / Edge):</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[11px]">
+                            <li>Tap the <strong>three dots menu (⋮)</strong> in top right.</li>
+                            <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
+                            <li>Confirm to install AmeriTest as a full-screen Android app.</li>
+                        </ol>`;
+                } else if (platform === 'windows') {
+                    content.innerHTML = `<p class="font-bold text-white mb-1"><i class="fa-brands fa-windows text-blue-400 mr-1"></i> Windows (Chrome / Edge):</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[11px]">
+                            <li>Look at the address bar in Chrome or Edge.</li>
+                            <li>Click the <strong>Install Icon (⊕)</strong> on the right side of URL bar.</li>
+                            <li>Click <strong>"Install"</strong> to add to Start Menu & Desktop.</li>
+                        </ol>`;
+                } else if (platform === 'mac') {
+                    content.innerHTML = `<p class="font-bold text-white mb-1"><i class="fa-brands fa-apple text-slate-300 mr-1"></i> macOS (Safari / Chrome):</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[11px]">
+                            <li><strong>Safari:</strong> Click File → <strong>"Add to Dock"</strong>.</li>
+                            <li><strong>Chrome/Edge:</strong> Click address bar install icon (⊕) → <strong>"Install"</strong>.</li>
+                            <li>Access AmeriTest directly from Launchpad or Dock.</li>
+                        </ol>`;
+                } else if (platform === 'ios') {
+                    content.innerHTML = `<p class="font-bold text-white mb-1"><i class="fa-solid fa-mobile-screen text-indigo-400 mr-1"></i> iOS / iPadOS (Safari):</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[11px]">
+                            <li>Tap the <strong>Share button</strong> in bottom Safari bar.</li>
+                            <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+                            <li>Tap <strong>"Add"</strong> in top right.</li>
+                        </ol>`;
+                }
+            }
+
+            initSpeechSynth() {
+                this.synth = window.speechSynthesis;
+                this.usVoice = null;
+                const loadVoices = () => {
+                    if (!this.synth) return;
+                    const voices = this.synth.getVoices();
+                    this.usVoice = voices.find(v => v.lang === 'en-US' || v.lang.includes('US') || v.name.includes('American') || v.name.includes('Samantha'));
+                };
+                if (this.synth) {
+                    loadVoices();
+                    if (speechSynthesis.onvoiceschanged !== undefined) {
+                        speechSynthesis.onvoiceschanged = loadVoices;
+                    }
+                }
+            }
+
+            changeLanguage(langCode) {
+                if (!TRANSLATIONS[langCode]) return;
+                this.currentLang = langCode;
+                const dict = TRANSLATIONS[langCode];
+                document.querySelectorAll('[data-i18n]').forEach(elem => {
+                    const key = elem.getAttribute('data-i18n');
+                    if (dict[key]) {
+                        elem.textContent = dict[key];
+                    }
+                });
+                document.documentElement.dir = (langCode === 'ar') ? 'rtl' : 'ltr';
+            }
+
+            toggleAudioSettings() {
+                this.audioEnabled = !this.audioEnabled;
+                const statusElem = document.getElementById('audio-status-text');
+                const iconElem = document.getElementById('audio-icon');
+                if (this.audioEnabled) {
+                    statusElem.textContent = "Audio";
+                    statusElem.className = "text-emerald-400 font-semibold text-[11px]";
+                    iconElem.className = "fa-solid fa-volume-high text-blue-400";
+                } else {
+                    statusElem.textContent = "Muted";
+                    statusElem.className = "text-slate-500 font-semibold text-[11px]";
+                    iconElem.className = "fa-solid fa-volume-xmark text-slate-500";
+                }
+            }
+
+            startTest() {
+                const nameInput = document.getElementById('user-name').value.trim();
+                this.userName = nameInput || "Alex Morgan";
+                this.timerEnabled = document.getElementById('timer-toggle').checked;
+
+                this.currentQuestionIndex = 0;
+                this.currentLevelIdx = 1; // Start at A2
+                this.testHistory = [];
+                this.usedQuestionIds = new Set();
+
+                document.getElementById('view-welcome').classList.add('hidden');
+                document.getElementById('view-quiz').classList.remove('hidden');
+
+                this.loadNextQuestion();
+            }
+
+            loadNextQuestion() {
+                this.selectedOptionIdx = null;
+                this.stopTimer();
+
+                const currentLevelCode = LEVEL_ORDER[this.currentLevelIdx];
+                const pool = QUESTION_BANK[currentLevelCode] || QUESTION_BANK['A2'];
+                
+                let available = pool.filter(q => !this.usedQuestionIds.has(q.id));
+                if (available.length === 0) available = pool;
+                
+                const question = available[Math.floor(Math.random() * available.length)];
+                this.usedQuestionIds.add(question.id);
+                this.currentQuestion = Object.assign({}, question, { targetLevel: currentLevelCode });
+
+                document.getElementById('quiz-q-num').textContent = this.currentQuestionIndex + 1;
+                document.getElementById('quiz-progress-bar').style.width = ((this.currentQuestionIndex + 1) / 10 * 100) + '%';
+                document.getElementById('quiz-current-level').textContent = 'Target: ' + currentLevelCode;
+                document.getElementById('q-category').innerHTML = `<i class="fa-solid fa-layer-group text-blue-400"></i> ${question.category} (${currentLevelCode})`;
+
+                const audioBtn = document.getElementById('q-audio-play-btn');
+                if (question.hasAudio) {
+                    audioBtn.classList.remove('hidden');
+                    audioBtn.classList.add('flex');
+                    if (this.audioEnabled) setTimeout(() => this.playQuestionAudio(), 300);
+                } else {
+                    audioBtn.classList.add('hidden');
+                    audioBtn.classList.remove('flex');
+                }
+
+                const contextElem = document.getElementById('q-context');
+                if (question.context) {
+                    contextElem.innerHTML = `<i class="fa-solid fa-quote-left mr-2 text-blue-400"></i>${question.context}`;
+                    contextElem.classList.remove('hidden');
+                } else {
+                    contextElem.classList.add('hidden');
+                }
+
+                document.getElementById('q-prompt').textContent = question.prompt;
+
+                const optionsContainer = document.getElementById('q-options-container');
+                optionsContainer.innerHTML = '';
+
+                question.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-card w-full p-4 rounded-xl border border-slate-800 bg-slate-900/60 text-left flex items-start space-x-3 text-slate-200 text-sm';
+                    btn.onclick = () => this.selectOption(idx);
+                    btn.innerHTML = `<span class="w-6 h-6 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">${String.fromCharCode(65 + idx)}</span>
+                        <span class="flex-1 font-medium">${opt.text}</span>
+                        <i class="fa-regular fa-circle text-slate-600 text-lg shrink-0 mt-0.5 status-icon"></i>`;
+                    optionsContainer.appendChild(btn);
+                });
+
+                const nextBtn = document.getElementById('next-btn');
+                nextBtn.disabled = true;
+                nextBtn.className = 'px-6 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl text-sm transition flex items-center gap-2 cursor-not-allowed border border-slate-700';
+
+                if (this.timerEnabled) {
+                    document.getElementById('quiz-timer-container').classList.remove('hidden');
+                    this.startTimer();
+                } else {
+                    document.getElementById('quiz-timer-container').classList.add('hidden');
+                }
+            }
+
+            playQuestionAudio() {
+                if (!this.synth || !this.currentQuestion.hasAudio) return;
+                this.synth.cancel();
+                const utterance = new SpeechSynthesisUtterance(this.currentQuestion.audioText);
+                utterance.rate = 0.9;
+                if (this.usVoice) utterance.voice = this.usVoice;
+                this.synth.speak(utterance);
+            }
+
+            selectOption(idx) {
+                this.selectedOptionIdx = idx;
+                const children = document.getElementById('q-options-container').children;
+
+                for (let i = 0; i < children.length; i++) {
+                    const child = children[i];
+                    const icon = child.querySelector('.status-icon');
+                    if (i === idx) {
+                        child.classList.add('selected');
+                        child.classList.remove('border-slate-800', 'bg-slate-900/60');
+                        icon.className = "fa-solid fa-circle-check text-blue-400 text-lg shrink-0 mt-0.5 status-icon";
+                    } else {
+                        child.classList.remove('selected');
+                        child.classList.add('border-slate-800', 'bg-slate-900/60');
+                        icon.className = "fa-regular fa-circle text-slate-600 text-lg shrink-0 mt-0.5 status-icon";
+                    }
+                }
+
+                const nextBtn = document.getElementById('next-btn');
+                nextBtn.disabled = false;
+                nextBtn.className = 'px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer border border-blue-400/30';
+            }
+
+            startTimer() {
+                this.timeLeft = 45;
+                document.getElementById('quiz-timer').textContent = this.timeLeft;
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('quiz-timer').textContent = this.timeLeft;
+                    if (this.timeLeft <= 0) {
+                        this.stopTimer();
+                        if (this.selectedOptionIdx === null) this.selectedOptionIdx = -1;
+                        this.submitAnswer();
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            submitAnswer() {
+                this.stopTimer();
+                const isCorrect = this.selectedOptionIdx >= 0 && this.currentQuestion.options[this.selectedOptionIdx].correct;
+                
+                this.testHistory.push({
+                    question: this.currentQuestion,
+                    selectedIndex: this.selectedOptionIdx,
+                    isCorrect: isCorrect,
+                    levelAtTime: LEVEL_ORDER[this.currentLevelIdx],
+                    timeTaken: 45 - this.timeLeft
+                });
+
+                if (isCorrect) {
+                    if (this.currentLevelIdx < LEVEL_ORDER.length - 1) this.currentLevelIdx++;
+                } else {
+                    if (this.currentLevelIdx > 0) this.currentLevelIdx--;
+                }
+
+                this.currentQuestionIndex++;
+                if (this.currentQuestionIndex < 10) {
+                    this.loadNextQuestion();
+                } else {
+                    this.finishTest();
+                }
+            }
+
+            finishTest() {
+                document.getElementById('view-quiz').classList.add('hidden');
+                document.getElementById('view-results').classList.remove('hidden');
+
+                let correctCount = 0;
+                let highestLevelReachedIdx = 0;
+                let totalTime = 0;
+
+                const categoryStats = {
+                    'Grammar': { correct: 0, total: 0 },
+                    'Vocabulary': { correct: 0, total: 0 },
+                    'Idioms': { correct: 0, total: 0 },
+                    'Listening': { correct: 0, total: 0 }
+                };
+
+                this.testHistory.forEach(item => {
+                    totalTime += item.timeTaken || 15;
+                    const levelIdx = LEVEL_ORDER.indexOf(item.levelAtTime);
+
+                    if (item.isCorrect) {
+                        correctCount++;
+                        if (levelIdx > highestLevelReachedIdx) highestLevelReachedIdx = levelIdx;
+                    }
+
+                    const catKey = item.question.category.includes('Idiom') || item.question.category.includes('Phrase') ? 'Idioms' :
+                                   item.question.category.includes('Audio') || item.question.category.includes('Listening') ? 'Listening' :
+                                   item.question.category.includes('Grammar') ? 'Grammar' : 'Vocabulary';
+                    
+                    categoryStats[catKey].total++;
+                    if (item.isCorrect) categoryStats[catKey].correct++;
+                });
+
+                const accuracy = correctCount / 10;
+                let finalLevelIdx = 0;
+
+                if (accuracy >= 0.9) finalLevelIdx = Math.min(5, Math.max(4, highestLevelReachedIdx));
+                else if (accuracy >= 0.7) finalLevelIdx = Math.min(4, Math.max(3, highestLevelReachedIdx));
+                else if (accuracy >= 0.5) finalLevelIdx = Math.min(3, Math.max(2, highestLevelReachedIdx));
+                else if (accuracy >= 0.3) finalLevelIdx = Math.min(2, Math.max(1, highestLevelReachedIdx));
+                else finalLevelIdx = 0;
+
+                const finalLevelCode = LEVEL_ORDER[finalLevelIdx];
+                const levelData = LEVEL_DETAILS[finalLevelCode];
+
+                document.getElementById('res-user-name').textContent = this.userName;
+                document.getElementById('res-cefr-code').textContent = finalLevelCode;
+                document.getElementById('res-cefr-title').textContent = levelData.name;
+
+                const equivs = EXAM_EQUIV_MAP[finalLevelCode];
+                document.getElementById('equiv-toefl').textContent = equivs.toefl;
+                document.getElementById('equiv-ielts').textContent = equivs.ielts;
+                document.getElementById('equiv-det').textContent = equivs.det;
+                document.getElementById('equiv-toeic').textContent = equivs.toeic;
+
+                document.getElementById('res-accuracy-percent').textContent = Math.round(accuracy * 100) + '% Accuracy';
+                document.getElementById('res-correct-count').textContent = correctCount + ' / 10';
+                document.getElementById('res-peak-level').textContent = LEVEL_ORDER[highestLevelReachedIdx];
+                document.getElementById('res-avg-time').textContent = Math.round(totalTime / 10) + 's';
+
+                this.updateBar('grammar', categoryStats['Grammar']);
+                this.updateBar('vocab', categoryStats['Vocabulary']);
+                this.updateBar('idioms', categoryStats['Idioms']);
+                this.updateBar('listening', categoryStats['Listening']);
+
+                if (finalLevelIdx >= 2 && typeof confetti === 'function') {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+            }
+
+            updateBar(id, stat) {
+                const percent = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 75;
+                document.getElementById('score-' + id).textContent = percent + '%';
+                document.getElementById('bar-' + id).style.width = percent + '%';
+            }
+
+            toggleReviewModal() {
+                const modal = document.getElementById('modal-review');
+                if (modal.classList.contains('hidden')) {
+                    this.renderReviewList();
+                    modal.classList.remove('hidden');
+                } else {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            renderReviewList() {
+                const container = document.getElementById('review-list');
+                container.innerHTML = '';
+
+                this.testHistory.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = `p-4 rounded-xl border ${item.isCorrect ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-rose-500/30 bg-rose-950/10'} space-y-2`;
+                    
+                    const selectedText = item.selectedIndex >= 0 ? item.question.options[item.selectedIndex].text : "Timed Out";
+                    const correctOpt = item.question.options.find(o => o.correct);
+
+                    div.innerHTML = `<div class="flex items-center justify-between text-xs font-bold">
+                        <span class="text-slate-400">Question ${idx + 1} (${item.levelAtTime})</span>
+                        <span class="${item.isCorrect ? 'text-emerald-400' : 'text-rose-400'} font-semibold flex items-center gap-1">
+                            <i class="fa-solid ${item.isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                            ${item.isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-200">${item.question.prompt}</p>
+                    <div class="text-xs space-y-1 pt-1">
+                        <div class="${item.isCorrect ? 'text-emerald-300' : 'text-rose-300'}">
+                            <strong>Your Answer:</strong> ${selectedText}
+                        </div>
+                        ${!item.isCorrect ? `<div class="text-emerald-400"><strong>Correct Answer:</strong> ${correctOpt.text}</div>` : ''}
+                    </div>
+                    <p class="text-xs text-slate-400 italic bg-slate-900/50 p-2 rounded border border-slate-800/80 mt-2">
+                        <i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> ${item.question.explanation}
+                    </p>`;
+                    container.appendChild(div);
+                });
+            }
+
+            generateCertificate() {
+                const finalCode = document.getElementById('res-cefr-code').textContent;
+                const levelData = LEVEL_DETAILS[finalCode];
+
+                document.getElementById('cert-user-name').textContent = this.userName;
+                document.getElementById('cert-cefr-code').textContent = finalCode;
+                document.getElementById('cert-cefr-title').textContent = levelData.name;
+                document.getElementById('cert-date').textContent = 'Date: ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                document.getElementById('cert-id').textContent = 'US-CEFR-' + Math.floor(10000 + Math.random() * 90000) + '-X';
+
+                this.toggleCertModal();
+            }
+
+            toggleCertModal() {
+                document.getElementById('modal-certificate').classList.toggle('hidden');
+            }
+
+            printCertificate() {
+                window.print();
+            }
+
+            resetToHome() {
+                this.stopTimer();
+                document.getElementById('view-results').classList.add('hidden');
+                document.getElementById('view-quiz').classList.add('hidden');
+                document.getElementById('view-welcome').classList.remove('hidden');
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new AmericanCEFRApp();
+        });
+    </script>
+</body>
+</html>
